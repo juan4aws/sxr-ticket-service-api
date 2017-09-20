@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  DynamoDBTicketTable:
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: S
+      KeySchema:
+      - AttributeName: id
+        KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+    Type: AWS::DynamoDB::Table
+  ScratchFunction:
+    Properties:
+      CodeUri: s3://ticket-service-deployment/a2adf94d6ec1ae0bd36b67214797b7ef
+      Environment:
+        Variables:
+          ECHO_PHRASE: hello world
+      Events:
+        GetResource:
+          Properties:
+            Method: get
+            Path: /scratch
+          Type: Api
+      Handler: scratch.handler
+      Runtime: nodejs6.10
+    Type: AWS::Serverless::Function
+  TicketListFunction:
+    Properties:
+      CodeUri: s3://ticket-service-deployment/a2adf94d6ec1ae0bd36b67214797b7ef
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: DynamoDBTicketTable
+      Events:
+        GetResource:
+          Properties:
+            Method: get
+            Path: /ticket
+          Type: Api
+      Handler: tickets-get.handler
+      Policies: AWSLambdaDynamoDBExecutionRole
+      Runtime: nodejs6.10
+    Type: AWS::Serverless::Function
+  TicketPutFunction:
+    Properties:
+      CodeUri: s3://ticket-service-deployment/a2adf94d6ec1ae0bd36b67214797b7ef
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: DynamoDBTicketTable
+      Events:
+        GetResource:
+          Properties:
+            Method: put
+            Path: /ticket
+          Type: Api
+      Handler: tickets-put.handler
+      Policies: AWSLambdaDynamoDBExecutionRole
+      Runtime: nodejs6.10
+    Type: AWS::Serverless::Function
+Transform: AWS::Serverless-2016-10-31

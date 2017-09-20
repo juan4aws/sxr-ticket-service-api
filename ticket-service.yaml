@@ -6,6 +6,7 @@ Resources:
     Properties:
       Handler: scratch.handler
       Runtime: nodejs6.10
+      FunctionName: ScratchFunction
       Environment:
         Variables:
           ECHO_PHRASE: hello world
@@ -15,12 +16,21 @@ Resources:
           Properties:
             Path: /scratch
             Method: get
-  TicketListFunction:
+  TicketGetFunction:
     Type: AWS::Serverless::Function
     Properties:
       Handler: tickets-get.handler
       Runtime: nodejs6.10
-      Policies: AWSLambdaDynamoDBExecutionRole
+      FunctionName: TicketGetFunction
+      Policies:
+        - AWSLambdaDynamoDBExecutionRole #managed policy
+        - Version: '2012-10-17' # Policy Document
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:Scan
+                - dynamodb:GetItem
+              Resource: !GetAtt DynamoDBTicketTable.Arn
       Environment:
         Variables:
           TABLE_NAME: !Ref DynamoDBTicketTable
@@ -30,12 +40,20 @@ Resources:
           Properties:
             Path: /ticket
             Method: get
-  TicketPutFunction:
+  TicketPostFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: tickets-put.handler
+      Handler: tickets-post.handler
       Runtime: nodejs6.10
-      Policies: AWSLambdaDynamoDBExecutionRole
+      FunctionName: TicketPostFunction
+      Policies:
+        - AWSLambdaDynamoDBExecutionRole #managed policy
+        - Version: '2012-10-17' # Policy Document
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:PutItem
+              Resource: !GetAtt DynamoDBTicketTable.Arn
       Environment:
         Variables:
           TABLE_NAME: !Ref DynamoDBTicketTable
@@ -44,10 +62,11 @@ Resources:
           Type: Api
           Properties:
             Path: /ticket
-            Method: put
+            Method: post
   DynamoDBTicketTable:
    Type: AWS::DynamoDB::Table
    Properties:
+     TableName: SXRTickets
      AttributeDefinitions:
        - AttributeName: id
          AttributeType: S

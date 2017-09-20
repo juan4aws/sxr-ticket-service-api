@@ -11,10 +11,11 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
+      TableName: SXRTickets
     Type: AWS::DynamoDB::Table
   ScratchFunction:
     Properties:
-      CodeUri: s3://ticket-service-deployment/a2adf94d6ec1ae0bd36b67214797b7ef
+      CodeUri: s3://ticket-service-deployment/1721fcec10b2c3b45b7ecb31af3fcd55
       Environment:
         Variables:
           ECHO_PHRASE: hello world
@@ -24,12 +25,13 @@ Resources:
             Method: get
             Path: /scratch
           Type: Api
+      FunctionName: ScratchFunction
       Handler: scratch.handler
       Runtime: nodejs6.10
     Type: AWS::Serverless::Function
-  TicketListFunction:
+  TicketGetFunction:
     Properties:
-      CodeUri: s3://ticket-service-deployment/a2adf94d6ec1ae0bd36b67214797b7ef
+      CodeUri: s3://ticket-service-deployment/1721fcec10b2c3b45b7ecb31af3fcd55
       Environment:
         Variables:
           TABLE_NAME:
@@ -40,13 +42,25 @@ Resources:
             Method: get
             Path: /ticket
           Type: Api
+      FunctionName: TicketGetFunction
       Handler: tickets-get.handler
-      Policies: AWSLambdaDynamoDBExecutionRole
+      Policies:
+      - AWSLambdaDynamoDBExecutionRole
+      - Statement:
+        - Action:
+          - dynamodb:Scan
+          - dynamodb:GetItem
+          Effect: Allow
+          Resource:
+            Fn::GetAtt:
+            - DynamoDBTicketTable
+            - Arn
+        Version: '2012-10-17'
       Runtime: nodejs6.10
     Type: AWS::Serverless::Function
-  TicketPutFunction:
+  TicketPostFunction:
     Properties:
-      CodeUri: s3://ticket-service-deployment/a2adf94d6ec1ae0bd36b67214797b7ef
+      CodeUri: s3://ticket-service-deployment/1721fcec10b2c3b45b7ecb31af3fcd55
       Environment:
         Variables:
           TABLE_NAME:
@@ -54,11 +68,22 @@ Resources:
       Events:
         GetResource:
           Properties:
-            Method: put
+            Method: post
             Path: /ticket
           Type: Api
-      Handler: tickets-put.handler
-      Policies: AWSLambdaDynamoDBExecutionRole
+      FunctionName: TicketPostFunction
+      Handler: tickets-post.handler
+      Policies:
+      - AWSLambdaDynamoDBExecutionRole
+      - Statement:
+        - Action:
+          - dynamodb:PutItem
+          Effect: Allow
+          Resource:
+            Fn::GetAtt:
+            - DynamoDBTicketTable
+            - Arn
+        Version: '2012-10-17'
       Runtime: nodejs6.10
     Type: AWS::Serverless::Function
 Transform: AWS::Serverless-2016-10-31

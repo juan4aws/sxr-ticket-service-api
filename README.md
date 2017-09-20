@@ -15,15 +15,4 @@ aws cloudformation deploy \
 
 
 
-export interface ITicket {
-  id: string;
-  description: string;
-  assigned: string;
-  priority: string;
-  status: string;
-  created: string;
-  createdBy: string
-}
-
-
 

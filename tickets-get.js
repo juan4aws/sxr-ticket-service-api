@@ -1,15 +1,28 @@
 'use strict';
 
+const AWS = require("aws-sdk");
+const table = process.env.TABLE_NAME;
+
 exports.handler = (event, context, callback) => {
 
-    const response = {
-        statusCode: 200,
-        body: JSON.stringify({
-            message: 'Your function executed successfully!',
-            input: event
-        })
+    const docClient = new AWS.DynamoDB.DocumentClient();
+
+    const params = {
+        TableName: table
     };
 
-    callback(null, response);
+    docClient.scan(params, function (err, data) {
+        if (err)
+            console.log(JSON.stringify(err, null, 2));
+        else {
+
+            let response = {
+                statusCode: 200,
+                body: JSON.stringify(data)
+            };
+
+            callback(null, response);
+        }
+    });
 
 };

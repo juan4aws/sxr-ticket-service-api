@@ -1,15 +1,15 @@
 exports.handler = function(event, context, callback) {
 
-    var responseCode = 200;
+    const responseCode = 200;
 
-    var bucketName = process.env.ECHO_PHRASE;
+    const bucketName = process.env.ECHO_PHRASE;
 
-    var responseBody = {
+    const responseBody = {
         message: "Bucket: " + bucketName + "!",
         input: event
     };
 
-    var response = {
+    const response = {
         statusCode: responseCode,
         headers: {
             "x-custom-header" : "custom header val"

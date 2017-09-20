@@ -1,5 +1,14 @@
+# About
 
-#Commands
+This is the backend api for serverless cross region re:Invent project.
+
+
+# TODO
+- [ ] still have to manually add CORS to API, cfn'ify it.
+
+
+
+# Commands
 
 Package
 aws cloudformation package \

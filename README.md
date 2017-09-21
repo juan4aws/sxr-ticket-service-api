@@ -4,7 +4,9 @@ This is the backend api for serverless cross region re:Invent project.
 
 
 # TODO
-- [ ] still have to manually add CORS to API, cfn'ify it.
+- [ ] still have to manually add CORS to API options pre-flight 
+requests, cfn'ify it.
+- [ ] automate via code pipeline
 
 
 
@@ -19,7 +21,7 @@ aws cloudformation package \
 Deploy
 aws cloudformation deploy \
 --template-file ticket-service-output.yaml \
---stack-name ticket-service-stack \
+--stack-name ticket-service-api \
 --capabilities CAPABILITY_IAM
 
 

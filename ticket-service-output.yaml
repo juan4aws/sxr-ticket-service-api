@@ -15,7 +15,7 @@ Resources:
     Type: AWS::DynamoDB::Table
   ScratchFunction:
     Properties:
-      CodeUri: s3://ticket-service-deployment/1721fcec10b2c3b45b7ecb31af3fcd55
+      CodeUri: s3://ticket-service-deployment/16fd5fe119bc3629563142b9ab3e59f6
       Environment:
         Variables:
           ECHO_PHRASE: hello world
@@ -31,7 +31,7 @@ Resources:
     Type: AWS::Serverless::Function
   TicketGetFunction:
     Properties:
-      CodeUri: s3://ticket-service-deployment/1721fcec10b2c3b45b7ecb31af3fcd55
+      CodeUri: s3://ticket-service-deployment/16fd5fe119bc3629563142b9ab3e59f6
       Environment:
         Variables:
           TABLE_NAME:
@@ -60,7 +60,7 @@ Resources:
     Type: AWS::Serverless::Function
   TicketPostFunction:
     Properties:
-      CodeUri: s3://ticket-service-deployment/1721fcec10b2c3b45b7ecb31af3fcd55
+      CodeUri: s3://ticket-service-deployment/16fd5fe119bc3629563142b9ab3e59f6
       Environment:
         Variables:
           TABLE_NAME:

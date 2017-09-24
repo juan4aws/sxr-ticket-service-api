@@ -1,21 +1,61 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Resources:
-  ScratchFunction:
-    Type: AWS::Serverless::Function
+  TicketServiceAPI:
+    Type: AWS::Serverless::Api
     Properties:
-      Handler: scratch.handler
-      Runtime: nodejs6.10
-      FunctionName: ScratchFunction
-      Environment:
-        Variables:
-          ECHO_PHRASE: hello world
-      Events:
-        GetResource:
-          Type: Api
-          Properties:
-            Path: /scratch
-            Method: get
+      StageName: prod
+      DefinitionBody:
+        swagger: 2.0
+        info:
+          title:
+            Ref: AWS::StackName
+        paths:
+          "/ticket":
+            get:
+              responses: {}
+              x-amazon-apigateway-integration:
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TicketGetFunction.Arn}/invocations
+                passthroughBehavior: "when_no_match"
+                httpMethod: "POST"
+                type: "aws_proxy"
+            post:
+              responses: {}
+              x-amazon-apigateway-integration:
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TicketPostFunction.Arn}/invocations
+                passthroughBehavior: "when_no_match"
+                httpMethod: "POST"
+                type: "aws_proxy"
+            options:
+              consumes:
+              - "application/json"
+              produces:
+              - "application/json"
+              responses:
+                '200':
+                  description: "200 response"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: "string"
+                    Access-Control-Allow-Methods:
+                      type: "string"
+                    Access-Control-Allow-Headers:
+                      type: "string"
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: "200"
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Methods: "'POST,GET,OPTIONS'"
+                      method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                requestTemplates:
+                  application/json: "{\"statusCode\": 200}"
+                passthroughBehavior: "when_no_match"
+                type: "mock"
+        swagger: '2.0'
   TicketGetFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -40,6 +80,7 @@ Resources:
           Properties:
             Path: /ticket
             Method: get
+            RestApiId: !Ref TicketServiceAPI
   TicketPostFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -63,6 +104,7 @@ Resources:
           Properties:
             Path: /ticket
             Method: post
+            RestApiId: !Ref TicketServiceAPI
   DynamoDBTicketTable:
    Type: AWS::DynamoDB::Table
    Properties:
@@ -76,3 +118,13 @@ Resources:
      ProvisionedThroughput:
        ReadCapacityUnits: 5
        WriteCapacityUnits: 5
+Outputs:
+  ApiUrl:
+    Description: URL of your API endpoint
+    Value: !Join
+      - ''
+      - - https://
+        - !Ref TicketServiceAPI
+        - '.execute-api.'
+        - !Ref 'AWS::Region'
+        - '.amazonaws.com/prod/'

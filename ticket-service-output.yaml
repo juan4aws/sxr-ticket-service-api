@@ -26,7 +26,7 @@ Resources:
     Type: AWS::DynamoDB::Table
   TicketGetFunction:
     Properties:
-      CodeUri: s3://ticketservice-dev/326ff779457b0f15b5f15aef86f86b7b
+      CodeUri: s3://ticketservice-dev/326ff779457b0f15b5f15aef86f86bXX
       Environment:
         Variables:
           TABLE_NAME:

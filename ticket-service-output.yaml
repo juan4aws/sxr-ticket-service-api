@@ -1,4 +1,15 @@
 AWSTemplateFormatVersion: '2010-09-09'
+Outputs:
+  ApiUrl:
+    Description: URL of your API endpoint
+    Value:
+      Fn::Join:
+      - ''
+      - - https://
+        - Ref: TicketServiceAPI
+        - .execute-api.
+        - Ref: AWS::Region
+        - .amazonaws.com/prod/
 Resources:
   DynamoDBTicketTable:
     Properties:
@@ -13,25 +24,9 @@ Resources:
         WriteCapacityUnits: 5
       TableName: SXRTickets
     Type: AWS::DynamoDB::Table
-  ScratchFunction:
-    Properties:
-      CodeUri: s3://ticket-service-deployment/16fd5fe119bc3629563142b9ab3e59f6
-      Environment:
-        Variables:
-          ECHO_PHRASE: hello world
-      Events:
-        GetResource:
-          Properties:
-            Method: get
-            Path: /scratch
-          Type: Api
-      FunctionName: ScratchFunction
-      Handler: scratch.handler
-      Runtime: nodejs6.10
-    Type: AWS::Serverless::Function
   TicketGetFunction:
     Properties:
-      CodeUri: s3://ticket-service-deployment/16fd5fe119bc3629563142b9ab3e59f6
+      CodeUri: s3://ticketservice-dev/326ff779457b0f15b5f15aef86f86b7b
       Environment:
         Variables:
           TABLE_NAME:
@@ -41,6 +36,8 @@ Resources:
           Properties:
             Method: get
             Path: /ticket
+            RestApiId:
+              Ref: TicketServiceAPI
           Type: Api
       FunctionName: TicketGetFunction
       Handler: tickets-get.handler
@@ -60,7 +57,7 @@ Resources:
     Type: AWS::Serverless::Function
   TicketPostFunction:
     Properties:
-      CodeUri: s3://ticket-service-deployment/16fd5fe119bc3629563142b9ab3e59f6
+      CodeUri: s3://ticketservice-dev/326ff779457b0f15b5f15aef86f86b7b
       Environment:
         Variables:
           TABLE_NAME:
@@ -70,6 +67,8 @@ Resources:
           Properties:
             Method: post
             Path: /ticket
+            RestApiId:
+              Ref: TicketServiceAPI
           Type: Api
       FunctionName: TicketPostFunction
       Handler: tickets-post.handler
@@ -86,4 +85,58 @@ Resources:
         Version: '2012-10-17'
       Runtime: nodejs6.10
     Type: AWS::Serverless::Function
+  TicketServiceAPI:
+    Properties:
+      DefinitionBody:
+        info:
+          title:
+            Ref: AWS::StackName
+        paths:
+          /ticket:
+            get:
+              responses: {}
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                passthroughBehavior: when_no_match
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TicketGetFunction.Arn}/invocations
+            options:
+              consumes:
+              - application/json
+              produces:
+              - application/json
+              responses:
+                '200':
+                  description: 200 response
+                  headers:
+                    Access-Control-Allow-Headers:
+                      type: string
+                    Access-Control-Allow-Methods:
+                      type: string
+                    Access-Control-Allow-Origin:
+                      type: string
+              x-amazon-apigateway-integration:
+                passthroughBehavior: when_no_match
+                requestTemplates:
+                  application/json: '{"statusCode": 200}'
+                responses:
+                  default:
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+                      method.response.header.Access-Control-Allow-Methods: '''POST,GET,OPTIONS'''
+                      method.response.header.Access-Control-Allow-Origin: '''*'''
+                    statusCode: '200'
+                type: mock
+            post:
+              responses: {}
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                passthroughBehavior: when_no_match
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TicketPostFunction.Arn}/invocations
+        swagger: '2.0'
+      StageName: prod
+    Type: AWS::Serverless::Api
 Transform: AWS::Serverless-2016-10-31
